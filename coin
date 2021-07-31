@@ -1,0 +1,89 @@
+# -*- coding: cp949 -*-
+import pyupbit
+import pandas
+import datetime
+import time
+
+access_key= "9mQJdYhr3annzm1jQG3r51YRz3dUzkfExMOM4Kgx"
+secret_key = "bu5qmj9th859f9YM23PiXM4iSnL8UxaXKvWTvhaB"
+upbit = pyupbit.Upbit(access_key,secret_key)
+
+def rsi(ohlc: pandas.DataFrame, period: int = 14):
+    try:
+        delta = ohlc["close"].diff()
+    except:
+        pass
+    ups, downs = delta.copy(), delta.copy()
+    ups[ups<0] = 0
+    downs[downs >0] = 0
+
+    au = ups.ewm(com = period-1, min_periods = period).mean()
+    ad = downs.abs().ewm(com = period -1, min_periods = period).mean()
+
+    RS = au/ad
+     
+    return pandas.Series(100 - (100/(1+RS)), name = "RSI")
+
+def buy(coin):
+    money = upbit.get_balance("KRW")
+    if money <8000:
+        res = upbit.buy_market_order(coin, 10000)
+    elif money <20000:
+        res = upbit.buy_market_order(coin, 10000)
+    elif money <50000:
+        res = upbit.buy_market_order(coin, 10000)
+    elif money < 110000000:
+        res = upbit.buy_market_order(coin, 10000)
+    else:
+        res = upbit.buy_market_order(coin, money*0.3)
+    return
+
+def sell(coin):
+    amount = upbit.get_balance(coin)
+    cur_price = pyupbit.get_current_price(coin)
+    total = amount * cur_price
+    if total < 20000:
+        res = upbit.sell_market_order(coin, total)
+    elif total < 50000:
+        res = upbit.sell_market_order(coin, total)
+    elif total < 1000000000:
+        res = upbit.sell_market_order(coin, total)
+    else:
+        res = upbit.sell_market_order(coin, 10000)
+    return
+
+coinlist = ["KRW-BTC","KRW-ETH"]
+lower28 = []
+higher70 = []
+skyup = []
+skystop = []
+
+for i in range(len(coinlist)):
+    lower28.append(False)
+    higher70.append(False)
+    skyup.append(False)
+    skystop.append(False)
+
+while(True):
+    for i in range(len(coinlist)):
+        data = pyupbit.get_ohlcv(ticker = coinlist[i], interval = "minute3")
+        try:
+           now_rsi = rsi(data, 14).iloc[-1]
+        except:
+            pass
+        print("코인명: ", coinlist[i])
+        print("현재시간: ", datetime.datetime.now())
+        print("RSI : ", now_rsi)
+        print()
+        if now_rsi <= 30 :
+            lower28[i] = True
+            sell(coinlist[i])
+        elif now_rsi >= 35 and lower28[i] == True:
+            buy(coinlist[i])
+            lower28[i] = False
+        elif now_rsi >= 70 and higher70[i] == False:
+            sell(coinlist[i])
+            higher70[i] = True
+        elif now_rsi <= 60 :
+            higher70[i] = False
+    time.sleep(0.5)
