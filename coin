@@ -4,8 +4,8 @@ import pandas
 import datetime
 import time
 
-access_key= "9mQJdYhr3annzm1jQG3r51YRz3dUzkfExMOM4Kgx"
-secret_key = "bu5qmj9th859f9YM23PiXM4iSnL8UxaXKvWTvhaB"
+access_key= ""
+secret_key = ""
 upbit = pyupbit.Upbit(access_key,secret_key)
 
 def rsi(ohlc: pandas.DataFrame, period: int = 14):
